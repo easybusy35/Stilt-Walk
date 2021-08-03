@@ -4,86 +4,104 @@ using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
-	[Header("Movement")]
-	[SerializeField] float clampDelta;
+  [Header("Movement")]
+  [SerializeField] float clampDelta;
 
-	private Animator anim;
-	private Rigidbody rb;
-	private PlayerController script;
-	private PhysicsCorrector physicsCorrector;
-	private Vector3 lastMousePosition;
-	private bool canMove, finish;
-
-
-	public float speed;
-	public float sensitivity;
+  private Animator anim;
+  private Rigidbody rb;
+  private PlayerController script;
+  private PhysicsCorrector physicsCorrector;
+  private Vector3 lastMousePosition;
+  private bool canMove, finish;
 
 
-	public GameObject UIHand;
-	public GameObject UISwipe;
+  public float speed;
+  public float sensitivity;
 
-	private void Awake()
-	{
-		rb = GetComponent<Rigidbody>();
-		script = GetComponent<PlayerController>();
-		anim = GetComponent<Animator>();
-		physicsCorrector = GetComponent<PhysicsCorrector>();
-	}
 
-    private void Update()
+  public GameObject UIHand;
+  public GameObject UISwipe;
+
+  private void Awake()
+  {
+    rb = GetComponent<Rigidbody>();
+    script = GetComponent<PlayerController>();
+    anim = GetComponent<Animator>();
+    physicsCorrector = GetComponent<PhysicsCorrector>();
+  }
+
+  private void Update()
+  {
+    TouchToMove();
+  }
+
+  private void FixedUpdate()
+  {
+    Movement();
+    transform.position = new Vector3(Mathf.Clamp(transform.position.x, -4.7f, 4.8f), transform.position.y, transform.position.z);
+  }
+
+  private void TouchToMove()
+  {
+    if (!canMove && !finish)
     {
-		TouchToMove();
-	}
+      if (Input.GetMouseButtonDown(0))
+      {
+        canMove = true;
+        anim.SetBool("isRunning", true);
+      }
+      else
+      {
+        anim.SetBool("isRunning", false);
+      }
+    }
+  }
 
-    private void FixedUpdate()
+  private void Movement()
+  {
+    if (canMove)
     {
-		Movement();
-		transform.position = new Vector3(Mathf.Clamp(transform.position.x, -4.7f, 4.8f), transform.position.y, transform.position.z);
-	}
+      if (Input.GetMouseButton(0))
+      {
+        Vector3 pos = lastMousePosition - Input.mousePosition;
+        pos = new Vector3(pos.x, 0, 0);
 
-    private void TouchToMove()
+        lastMousePosition = Input.mousePosition;
+
+        Vector3 moveForce = Vector3.ClampMagnitude(pos, clampDelta);
+        rb.AddForce(-moveForce * sensitivity * speed * Time.deltaTime, ForceMode.VelocityChange);
+        UIHand.SetActive(false);
+        UISwipe.SetActive(false);
+      }
+    }
+  }
+
+  private void OnTriggerEnter(Collider other)
+  {
+    /*if (other.gameObject.CompareTag("Trigger"))
     {
-		if (!canMove && !finish)
-		{
-			if (Input.GetMouseButtonDown(0))
-            {
-				canMove = true;
-				anim.SetBool("isRunning", true);
-			}
-			else
-            {
-				anim.SetBool("isRunning", false);
-			}
-		}
-	}
+      canMove = false;
+      script.enabled = !script.enabled;
+      physicsCorrector.enabled = false;
+      anim.SetBool("isRunning", false);
 
-	private void Movement()
-	{
-		if (canMove)
-		{
-			if (Input.GetMouseButton(0))
-			{
-				Vector3 pos = lastMousePosition - Input.mousePosition;
-				pos = new Vector3(pos.x, 0, 0);
+      Debug.Log(other.name);
+    }    */
 
-				lastMousePosition = Input.mousePosition;
-
-				Vector3 moveForce = Vector3.ClampMagnitude(pos, clampDelta);
-				rb.AddForce(-moveForce * sensitivity * speed * Time.deltaTime, ForceMode.VelocityChange);
-				UIHand.SetActive(false);
-				UISwipe.SetActive(false);
-			}
-		}
-	}
-
-	private void OnTriggerEnter(Collider other)
+    if (other.tag == "Stilts")
     {
-		if (other.gameObject.CompareTag("Trigger"))
-        {
-			canMove = false;
-			script.enabled = !script.enabled;
-			physicsCorrector.enabled = false;
-			anim.SetBool("isRunning", false);
-		}
-	}
+      StackController.instance.AddStilts();
+      Destroy(other.gameObject);
+    }
+  }
+
+  private void OnTriggerExit(Collider other)
+  {
+
+    /* if (other.tag == "Stilts")
+     {
+       StackController.instance.AddStilts();
+       Destroy(other.gameObject);
+     }       */
+  }
 }
