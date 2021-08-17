@@ -14,13 +14,14 @@ public class PlayerController : MonoBehaviour
   private Vector3 lastMousePosition;
   private bool canMove, finish;
 
-
   public float speed;
   public float sensitivity;
 
-
   public GameObject UIHand;
   public GameObject UISwipe;
+
+  float originalYpos;
+
 
   private void Awake()
   {
@@ -33,6 +34,8 @@ public class PlayerController : MonoBehaviour
   private void Update()
   {
     TouchToMove();
+    originalYpos = gameObject.transform.localPosition.y;
+
   }
 
   private void FixedUpdate()
@@ -76,32 +79,57 @@ public class PlayerController : MonoBehaviour
     }
   }
 
+  public int temp;
+  public bool canTrigger;
+
   private void OnTriggerEnter(Collider other)
   {
-    /*if (other.gameObject.CompareTag("Trigger"))
-    {
-      canMove = false;
-      script.enabled = !script.enabled;
-      physicsCorrector.enabled = false;
-      anim.SetBool("isRunning", false);
-
-      Debug.Log(other.name);
-    }    */
-
-    if (other.tag == "Stilts")
+    if (other.tag == "Stilts" && canTrigger == true)
     {
       StackController.instance.AddStilts();
       Destroy(other.gameObject);
+
+      canTrigger = false;
+    }
+
+    if ((other.tag == "FireRing" || other.tag == "LastFireRing") && GameManager.instance.playersHight < 3 && canTrigger == true)
+    {
+      GameManager.instance.LooseRoutine();
+      canTrigger = false;
+    }
+
+  }
+
+  void OnTriggerStay(Collider other)
+  {
+    canTrigger = true;
+
+    if (other.tag == "Roll")
+    {
+      gameObject.transform.localPosition = new Vector3(gameObject.transform.localPosition.x, originalYpos, gameObject.transform.localPosition.z);
     }
   }
 
   private void OnTriggerExit(Collider other)
   {
 
-    /* if (other.tag == "Stilts")
-     {
-       StackController.instance.AddStilts();
-       Destroy(other.gameObject);
-     }       */
+    canTrigger = true;
+
+    if (other.tag == "FireRing" || other.tag == "LastFireRing")
+    {
+      for (int i = 0; i < StackController.instance.currentNumberOfStilts; i++)
+      {
+        StackController.instance.RemoveOneStilt();
+      }
+
+      if (other.tag == "LastFireRing" && GameManager.instance.didLoose == false)
+      {
+        GameManager.instance.WinRoutine();
+      }
+
+    }
+
   }
+
+
 }

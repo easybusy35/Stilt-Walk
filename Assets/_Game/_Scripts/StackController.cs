@@ -8,7 +8,7 @@ public class StackController : MonoBehaviour
   public static StackController instance;
   [SerializeField] List<GameObject> leftStilts = new List<GameObject>();
   [SerializeField] List<GameObject> rightStilts = new List<GameObject>();
-  [SerializeField] int currentNumberOfStilts = 0;
+  public int currentNumberOfStilts = 0;
 
   void Awake()
   {
@@ -25,30 +25,33 @@ public class StackController : MonoBehaviour
   {
     for (int i = 0; i < leftStilts.Count; i++)
     {
-      if (i == currentNumberOfStilts && i <= leftStilts.Count)
+      if (i == currentNumberOfStilts && i <= leftStilts.Count && i <= rightStilts.Count)
       {
-        Debug.Log("Up Arrow key was pressed.");
         leftStilts[i].SetActive(true);
         rightStilts[i].SetActive(true);
-        currentNumberOfStilts++;
+        currentNumberOfStilts += 1;
+        GameManager.instance.playersHight = currentNumberOfStilts;
         return;
       }
     }
+
+
   }
 
-  public void RemoveStilts()
+  public void RemoveOneStilt()
   {
     for (int i = 0; i < leftStilts.Count; i++)
     {
-      if (i == currentNumberOfStilts - 1 && i <= leftStilts.Count)
+      if (i == currentNumberOfStilts - 1 && i <= leftStilts.Count && i <= rightStilts.Count)
       {
-        Debug.Log("Down Arrow key was released.");
         leftStilts[i].SetActive(false);
         rightStilts[i].SetActive(false);
-        currentNumberOfStilts--;
+        currentNumberOfStilts -= 1;
+        GameManager.instance.playersHight = currentNumberOfStilts;
         return;
       }
     }
+
   }
 
   void Update()
@@ -58,14 +61,14 @@ public class StackController : MonoBehaviour
     {
 
 
-      AddStilts();
+      //AddStilts();
 
     }
 
     if (Input.GetKeyUp(KeyCode.DownArrow))
     {
 
-      RemoveStilts();
+      //RemoveOneStilt();
 
 
     }

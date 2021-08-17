@@ -6,6 +6,9 @@ TagManager:
   tags:
   - Stilts
   - Roll
+  - FireRing
+  - Floor
+  - LastFireRing
   layers:
   - Default
   - TransparentFX
