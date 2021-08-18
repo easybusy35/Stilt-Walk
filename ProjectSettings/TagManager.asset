@@ -9,6 +9,7 @@ TagManager:
   - FireRing
   - Floor
   - LastFireRing
+  - Move
   layers:
   - Default
   - TransparentFX

@@ -31,7 +31,7 @@ public class PhysicsCorrector : MonoBehaviour
     {
         if (canMove)
         {
-            PhysicsCorrector.ApplyForceToReachVelocity(r, Vector3.forward * 10, 30);
+            PhysicsCorrector.ApplyForceToReachVelocity(r, Vector3.forward * 15, 30);
         }
     }
 

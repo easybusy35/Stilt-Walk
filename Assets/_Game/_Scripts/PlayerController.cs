@@ -22,8 +22,11 @@ public class PlayerController : MonoBehaviour
 
   float originalYpos;
 
+  public Transform Wall1;
+  public Transform Wall2;
 
-  private void Awake()
+
+    private void Awake()
   {
     rb = GetComponent<Rigidbody>();
     script = GetComponent<PlayerController>();
@@ -82,23 +85,36 @@ public class PlayerController : MonoBehaviour
   public int temp;
   public bool canTrigger;
 
-  private void OnTriggerEnter(Collider other)
-  {
-    if (other.tag == "Stilts" && canTrigger == true)
+    private void OnTriggerEnter(Collider other)
     {
-      StackController.instance.AddStilts();
-      Destroy(other.gameObject);
+        if (other.tag == "Stilts" && canTrigger == true)
+        {
+            StackController.instance.AddStilts();
+            Destroy(other.gameObject);
 
-      canTrigger = false;
-    }
+            canTrigger = false;
+        }
 
-    if ((other.tag == "FireRing" || other.tag == "LastFireRing") && GameManager.instance.playersHight < 3 && canTrigger == true)
-    {
-      GameManager.instance.LooseRoutine();
-      canTrigger = false;
-    }
+        if ((other.tag == "FireRing" || other.tag == "LastFireRing") && GameManager.instance.playersHight < 3 && canTrigger == true)
+        {
+            GameManager.instance.LooseRoutine();
+            canTrigger = false;
+        }
 
-  }
+        if (other.tag == "Move")
+        {
+            Wall1.transform.position = new Vector3(-125, -19.5f, 205.1f);
+            Wall2.transform.position = new Vector3(125, -19.5f, 205.1f);
+        }
+
+        if (other.tag == "Finish")
+        {
+            physicsCorrector.enabled = false;
+            script.enabled = false;
+            anim.SetBool("isRunning", false);
+            anim.SetBool("isDancing", true);
+        }
+    }    
 
   void OnTriggerStay(Collider other)
   {
@@ -130,6 +146,4 @@ public class PlayerController : MonoBehaviour
     }
 
   }
-
-
 }
