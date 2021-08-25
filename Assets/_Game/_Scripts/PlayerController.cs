@@ -4,44 +4,55 @@ using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
-    [Header("Movement")]
-    [SerializeField] float clampDelta;
-    [SerializeField] AudioClip CollectingDiamonds;
-    [SerializeField] AudioClip CollectingStilts;
+  [Header("Movement")]
+  [SerializeField] float clampDelta;
+  [SerializeField] AudioClip CollectingDiamonds;
+  [SerializeField] AudioClip CollectingStilts;
 
-    AudioSource audioSource;
-    private Animator anim;
-    private Rigidbody rb;
-    private PlayerController script;
-    private PhysicsCorrector physicsCorrector;
-    private Vector3 lastMousePosition;
-    private bool canMove, finish;
+  public static PlayerController instance;
 
-    public float speed;
-    public float sensitivity;
+  AudioSource audioSource;
+  public Animator anim;
+  public Rigidbody rb;
+  // private PlayerController script;
+  private PhysicsCorrector physicsCorrector;
+  private Vector3 lastMousePosition;
 
-    public GameObject UIHand;
-    public GameObject UISwipe;
+  public float speed;
+  public float sensitivity;
 
-    public Transform Wall1;
-    public Transform Wall2;
+  public GameObject UIHand;
+  public GameObject UISwipe;
 
-    float originalYpos;
+  public Transform Wall1;
+  public Transform Wall2;
+  bool moveWinWalls = false;
 
+  float originalYpos;
 
-    private void Awake()
+  public bool canMove;
+  public bool canTrigger;
+
+  private void Awake()
   {
-        rb = GetComponent<Rigidbody>();
-        script = GetComponent<PlayerController>();
-        anim = GetComponent<Animator>();
-        physicsCorrector = GetComponent<PhysicsCorrector>();
-        audioSource = GetComponent<AudioSource>();
-    }
+    instance = this;
+    rb = GetComponent<Rigidbody>();
+    //script = GetComponent<PlayerController>();
+    physicsCorrector = GetComponent<PhysicsCorrector>();
+    audioSource = GetComponent<AudioSource>();
+  }
 
   private void Update()
   {
     TouchToMove();
     originalYpos = gameObject.transform.localPosition.y;
+
+    if (moveWinWalls == true)
+    {
+      float step = 3f * Time.deltaTime;
+      Wall1.transform.position = Vector3.MoveTowards(Wall1.transform.position, new Vector3(-125, -19.5f, 205.1f), step);
+      Wall2.transform.position = Vector3.MoveTowards(Wall2.transform.position, new Vector3(125, -19.5f, 205.1f), step);
+    }
 
   }
 
@@ -53,7 +64,7 @@ public class PlayerController : MonoBehaviour
 
   private void TouchToMove()
   {
-    if (!canMove && !finish)
+    if (!canMove)
     {
       if (Input.GetMouseButtonDown(0))
       {
@@ -86,47 +97,50 @@ public class PlayerController : MonoBehaviour
     }
   }
 
-  public int temp;
-  public bool canTrigger;
 
-    private void OnTriggerEnter(Collider other)
+  private void OnTriggerEnter(Collider other)
+  {
+    if (other.tag == "Stilts" && canTrigger == true)
     {
-        if (other.tag == "Stilts" && canTrigger == true)
-        {
-            audioSource.PlayOneShot(CollectingStilts);
-            StackController.instance.AddStilts();
-            Destroy(other.gameObject);
+      audioSource.PlayOneShot(CollectingStilts);
+      StackController.instance.AddStilts();
+      Destroy(other.gameObject);
 
-            canTrigger = false;
-        }
+      canTrigger = false;
+    }
 
-        if ((other.tag == "FireRing" || other.tag == "LastFireRing") && GameManager.instance.playersHight < 3 && canTrigger == true)
-        {
-            GameManager.instance.LooseRoutine();
-            canTrigger = false;
-        }
+    if ((other.tag == "FireRing" || other.tag == "LastFireRing") && GameManager.instance.playersHight < 3 && canTrigger == true)
+    {
+      GameManager.instance.LooseRoutine();
+      canTrigger = false;
+    }
 
-        if (other.tag == "Move")
-        {
-            Wall1.transform.position = new Vector3(-125, -19.5f, 205.1f);
-            Wall2.transform.position = new Vector3(125, -19.5f, 205.1f);
-        }
+    if (other.tag == "Flame")
+    {
+      GameManager.instance.LooseRoutine();
+    }
 
-        if (other.tag == "Finish")
-        {
-            physicsCorrector.enabled = false;
-            script.enabled = false;
-            anim.SetBool("isRunning", false);
-            anim.SetBool("isDancing", true);
-        }
+    if (other.tag == "Move")
+    {
+      moveWinWalls = true;
+    }
 
-        if (other.tag == "Diamond")
-        {
-            ScoreText.diamondAmount += 5;
-            Destroy(other.gameObject);
-            audioSource.PlayOneShot(CollectingDiamonds);
-        }
-    }    
+    if (other.tag == "Finish")
+    {
+      physicsCorrector.enabled = false;
+      // script.enabled = false;
+      canMove = false;
+      anim.SetBool("isRunning", false);
+      anim.SetBool("isDancing", true);
+    }
+
+    if (other.tag == "Diamond")
+    {
+      ScoreText.diamondAmount += 5;
+      Destroy(other.gameObject);
+      audioSource.PlayOneShot(CollectingDiamonds);
+    }
+  }
 
   void OnTriggerStay(Collider other)
   {

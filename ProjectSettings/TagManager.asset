@@ -11,6 +11,7 @@ TagManager:
   - LastFireRing
   - Move
   - Diamond
+  - Flame
   layers:
   - Default
   - TransparentFX
