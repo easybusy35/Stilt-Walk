@@ -10,6 +10,7 @@ TagManager:
   - Floor
   - LastFireRing
   - Move
+  - Diamond
   layers:
   - Default
   - TransparentFX

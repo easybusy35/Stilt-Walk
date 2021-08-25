@@ -4,35 +4,39 @@ using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
-  [Header("Movement")]
-  [SerializeField] float clampDelta;
+    [Header("Movement")]
+    [SerializeField] float clampDelta;
+    [SerializeField] AudioClip CollectingDiamonds;
+    [SerializeField] AudioClip CollectingStilts;
 
-  private Animator anim;
-  private Rigidbody rb;
-  private PlayerController script;
-  private PhysicsCorrector physicsCorrector;
-  private Vector3 lastMousePosition;
-  private bool canMove, finish;
+    AudioSource audioSource;
+    private Animator anim;
+    private Rigidbody rb;
+    private PlayerController script;
+    private PhysicsCorrector physicsCorrector;
+    private Vector3 lastMousePosition;
+    private bool canMove, finish;
 
-  public float speed;
-  public float sensitivity;
+    public float speed;
+    public float sensitivity;
 
-  public GameObject UIHand;
-  public GameObject UISwipe;
+    public GameObject UIHand;
+    public GameObject UISwipe;
 
-  float originalYpos;
+    public Transform Wall1;
+    public Transform Wall2;
 
-  public Transform Wall1;
-  public Transform Wall2;
+    float originalYpos;
 
 
     private void Awake()
   {
-    rb = GetComponent<Rigidbody>();
-    script = GetComponent<PlayerController>();
-    anim = GetComponent<Animator>();
-    physicsCorrector = GetComponent<PhysicsCorrector>();
-  }
+        rb = GetComponent<Rigidbody>();
+        script = GetComponent<PlayerController>();
+        anim = GetComponent<Animator>();
+        physicsCorrector = GetComponent<PhysicsCorrector>();
+        audioSource = GetComponent<AudioSource>();
+    }
 
   private void Update()
   {
@@ -89,6 +93,7 @@ public class PlayerController : MonoBehaviour
     {
         if (other.tag == "Stilts" && canTrigger == true)
         {
+            audioSource.PlayOneShot(CollectingStilts);
             StackController.instance.AddStilts();
             Destroy(other.gameObject);
 
@@ -113,6 +118,13 @@ public class PlayerController : MonoBehaviour
             script.enabled = false;
             anim.SetBool("isRunning", false);
             anim.SetBool("isDancing", true);
+        }
+
+        if (other.tag == "Diamond")
+        {
+            ScoreText.diamondAmount += 5;
+            Destroy(other.gameObject);
+            audioSource.PlayOneShot(CollectingDiamonds);
         }
     }    
 
