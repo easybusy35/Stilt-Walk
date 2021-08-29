@@ -6,10 +6,12 @@ public class PlayerController : MonoBehaviour
 {
   [Header("Movement")]
   [SerializeField] float clampDelta;
+
   [SerializeField] AudioClip CollectingDiamonds;
   [SerializeField] AudioClip CollectingStilts;
+  [SerializeField] AudioClip Losing;
 
-  public static PlayerController instance;
+    public static PlayerController instance;
 
   AudioSource audioSource;
   public Animator anim;
@@ -50,7 +52,7 @@ public class PlayerController : MonoBehaviour
     if (moveWinWalls == true)
     {
       float step = 3f * Time.deltaTime;
-      Wall1.transform.position = Vector3.MoveTowards(Wall1.transform.position, new Vector3(-125, -19.5f, 205.1f), step);
+      Wall1.transform.position = Vector3.MoveTowards(Wall1.transform.position, new Vector3(-0.56f, 2.1f, 196.1f), step);
       Wall2.transform.position = Vector3.MoveTowards(Wall2.transform.position, new Vector3(125, -19.5f, 205.1f), step);
     }
 
@@ -111,13 +113,16 @@ public class PlayerController : MonoBehaviour
 
     if ((other.tag == "FireRing" || other.tag == "LastFireRing") && GameManager.instance.playersHight < 3 && canTrigger == true)
     {
+      audioSource.PlayOneShot(Losing);
       GameManager.instance.LooseRoutine();
       canTrigger = false;
     }
 
     if (other.tag == "Flame")
     {
+      audioSource.PlayOneShot(Losing);
       GameManager.instance.LooseRoutine();
+
     }
 
     if (other.tag == "Move")
@@ -130,8 +135,8 @@ public class PlayerController : MonoBehaviour
       physicsCorrector.enabled = false;
       // script.enabled = false;
       canMove = false;
-      anim.SetBool("isRunning", false);
-      anim.SetBool("isDancing", true);
+      //anim.SetBool("isRunning", false);
+      //anim.SetBool("isDancing", true);
     }
 
     if (other.tag == "Diamond")
