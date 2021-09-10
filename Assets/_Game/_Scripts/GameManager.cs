@@ -4,6 +4,7 @@ using UnityEngine;
 public enum GameState
 {
   Home,
+  Game,
   Play,
   Win,
   Loose
@@ -19,6 +20,8 @@ public class GameManager : MonoBehaviour
   public int playersHight;
   public bool didLoose;
 
+  public GameObject player;
+
   void Awake()
   {
     instance = this;
@@ -28,13 +31,15 @@ public class GameManager : MonoBehaviour
 
   public void WinRoutine()
   {
-    Debug.Log("Win");
-    m_GameState = GameState.Win;
+    //Debug.Log("Win");
+    // m_GameState = GameState.Win;
+
+
   }
 
   public void LooseRoutine()
   {
-    Debug.Log("Loose");
+    // Debug.Log("Loose");
     physicsCorrector.enabled = false;
     PlayerController.instance.anim.SetBool("isFalling", true);
     didLoose = true;

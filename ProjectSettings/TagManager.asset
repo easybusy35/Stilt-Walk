@@ -12,6 +12,7 @@ TagManager:
   - Move
   - Diamond
   - Flame
+  - End
   layers:
   - Default
   - TransparentFX

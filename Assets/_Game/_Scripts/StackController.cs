@@ -9,16 +9,18 @@ public class StackController : MonoBehaviour
   [SerializeField] List<GameObject> leftStilts = new List<GameObject>();
   [SerializeField] List<GameObject> rightStilts = new List<GameObject>();
   public int currentNumberOfStilts = 0;
+  public float stiltHight;
 
   void Awake()
   {
-
     instance = this;
     for (int i = 0; i < leftStilts.Count; i++)
     {
       leftStilts[i].SetActive(false);
       rightStilts[i].SetActive(false);
     }
+
+    stiltHight = leftStilts[0].transform.localScale.y * 2;
   }
 
   public void AddStilts()
@@ -31,6 +33,8 @@ public class StackController : MonoBehaviour
         rightStilts[i].SetActive(true);
         currentNumberOfStilts += 1;
         GameManager.instance.playersHight = currentNumberOfStilts;
+        PlayerController.instance.playerYPos += stiltHight;
+        //   Debug.Log(currentNumberOfStilts);
         return;
       }
     }
@@ -48,6 +52,8 @@ public class StackController : MonoBehaviour
         rightStilts[i].SetActive(false);
         currentNumberOfStilts -= 1;
         GameManager.instance.playersHight = currentNumberOfStilts;
+        PlayerController.instance.playerYPos -= stiltHight;
+        // Debug.Log(currentNumberOfStilts);
         return;
       }
     }

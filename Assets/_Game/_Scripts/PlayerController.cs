@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
-//using UnityEngine.InputSystem;
+using System.Collections;
+
 
 public class PlayerController : MonoBehaviour
 {
@@ -11,7 +11,7 @@ public class PlayerController : MonoBehaviour
   [SerializeField] AudioClip CollectingStilts;
   [SerializeField] AudioClip Losing;
 
-    public static PlayerController instance;
+  public static PlayerController instance;
 
   AudioSource audioSource;
   public Animator anim;
@@ -30,38 +30,77 @@ public class PlayerController : MonoBehaviour
   public Transform Wall2;
   bool moveWinWalls = false;
 
-  float originalYpos;
+  public Transform rope;
+  //bool moveRope = false;
+  bool moveJump = false;
+
+  public float playerYPos;
 
   public bool canMove;
-  public bool canTrigger;
+
+  private bool canTrigger = true;
+  private bool didExitFire = false;
 
   private void Awake()
   {
     instance = this;
     rb = GetComponent<Rigidbody>();
-    //script = GetComponent<PlayerController>();
+
     physicsCorrector = GetComponent<PhysicsCorrector>();
     audioSource = GetComponent<AudioSource>();
+
+    GameManager.instance.m_GameState = GameState.Game;
   }
 
+
+  //   public Vector3 jumpPosition = new Vector3(-0.2499999f, 5f, 127.536f);
+  public Vector3 ropeFinalPosition = new Vector3(-0.56f, 2f, 196.1f);
   private void Update()
   {
-    TouchToMove();
-    originalYpos = gameObject.transform.localPosition.y;
-
-    if (moveWinWalls == true)
+    if (GameManager.instance.m_GameState == GameState.Game)
     {
-      float step = 3f * Time.deltaTime;
-      Wall1.transform.position = Vector3.MoveTowards(Wall1.transform.position, new Vector3(-0.56f, 2.1f, 196.1f), step);
-      Wall2.transform.position = Vector3.MoveTowards(Wall2.transform.position, new Vector3(125, -19.5f, 205.1f), step);
+      TouchToMove();
+      playerYPos = gameObject.transform.localPosition.y;
+
+
+
+      if (moveWinWalls == true)
+      {
+        float step = 3f * Time.deltaTime;
+        Wall1.transform.position = Vector3.MoveTowards(Wall1.transform.position, new Vector3(-0.56f, 2.1f, 196.1f), step);
+        Wall2.transform.position = Vector3.MoveTowards(Wall2.transform.position, new Vector3(125, -19.5f, 205.1f), step);
+      }
     }
+
+    if (GameManager.instance.m_GameState == GameState.Win)
+    {
+      if (Input.GetMouseButtonDown(0) && gameObject.transform.localPosition.y < 2f)
+      {
+        anim.SetTrigger("jumpToRope");
+        // gameObject.transform.SetParent(rope);
+        physicsCorrector.speed = physicsCorrector.speed * 4;
+        physicsCorrector.enabled = true;
+        DisableConstantForce();
+
+        gameObject.transform.localPosition = new Vector3(-0.2499999f, 4f, 127.536f);// Vector3.MoveTowards(gameObject.transform.localPosition, new Vector3(-0.2499999f, 5f, 127.536f), 40f * Time.deltaTime);
+
+        // rope.localPosition = Vector3.zero;
+
+        rope.transform.localPosition = new Vector3(0, -0.65f, -5.25f);
+        // rope.SetParent(gameObject.transform);
+      }
+    }
+
 
   }
 
   private void FixedUpdate()
   {
-    Movement();
-    transform.position = new Vector3(Mathf.Clamp(transform.position.x, -4.7f, 4.8f), transform.position.y, transform.position.z);
+    if (GameManager.instance.m_GameState == GameState.Game)
+    {
+      Movement();
+      transform.position = new Vector3(Mathf.Clamp(transform.position.x, -4.7f, 4.8f), transform.position.y, transform.position.z);
+    }
   }
 
   private void TouchToMove()
@@ -102,6 +141,9 @@ public class PlayerController : MonoBehaviour
 
   private void OnTriggerEnter(Collider other)
   {
+
+    didExitFire = false;
+
     if (other.tag == "Stilts" && canTrigger == true)
     {
       audioSource.PlayOneShot(CollectingStilts);
@@ -116,28 +158,23 @@ public class PlayerController : MonoBehaviour
       audioSource.PlayOneShot(Losing);
       GameManager.instance.LooseRoutine();
       canTrigger = false;
+
+      Debug.Log("Loosing - " + other.name + " Hight " + GameManager.instance.playersHight);
     }
 
-    if (other.tag == "Flame")
+    if (other.tag == "Flame" && GameManager.instance.playersHight < 3 && canTrigger == true)
     {
       audioSource.PlayOneShot(Losing);
       GameManager.instance.LooseRoutine();
+      //   Debug.Log("Loosing - " + other.name);
 
     }
 
     if (other.tag == "Move")
     {
-      moveWinWalls = true;
     }
 
-    if (other.tag == "Finish")
-    {
-      physicsCorrector.enabled = false;
-      // script.enabled = false;
-      canMove = false;
-      //anim.SetBool("isRunning", false);
-      //anim.SetBool("isDancing", true);
-    }
+
 
     if (other.tag == "Diamond")
     {
@@ -145,36 +182,86 @@ public class PlayerController : MonoBehaviour
       Destroy(other.gameObject);
       audioSource.PlayOneShot(CollectingDiamonds);
     }
+
+    if (other.tag == "End")
+    {
+
+      physicsCorrector.speed = physicsCorrector.speed / 4;
+      GetComponent<Rigidbody>().velocity = Vector3.zero;
+      physicsCorrector.enabled = false;
+      EnableConstantforce();
+      rope.gameObject.SetActive(false);
+      anim.SetTrigger("fallFromRope");
+      //  Debug.Log("End");
+    }
+
+
+    if (other.tag == "Finish")
+    {
+      physicsCorrector.enabled = false;
+      canMove = false;
+      StartCoroutine(RopeRoutine());
+    }
+
   }
+
+  IEnumerator RopeRoutine()
+  {
+    rope.SetParent(gameObject.transform);
+    float step = 10 * Time.deltaTime;
+
+    while (rope.transform.position != ropeFinalPosition)
+    {
+      rope.transform.position = Vector3.MoveTowards(rope.transform.position, ropeFinalPosition, step);
+      yield return new WaitForEndOfFrame();
+
+    }
+
+    GameManager.instance.m_GameState = GameState.Win;
+  }
+
+
 
   void OnTriggerStay(Collider other)
   {
     canTrigger = true;
-
-    if (other.tag == "Roll")
-    {
-      gameObject.transform.localPosition = new Vector3(gameObject.transform.localPosition.x, originalYpos, gameObject.transform.localPosition.z);
-    }
   }
+
+
+
 
   private void OnTriggerExit(Collider other)
   {
 
-    canTrigger = true;
+    // canTrigger = true;
 
-    if (other.tag == "FireRing" || other.tag == "LastFireRing")
+    if ((other.tag == "FireRing" || other.tag == "LastFireRing") && didExitFire == false)
     {
-      for (int i = 0; i < StackController.instance.currentNumberOfStilts; i++)
+      for (int i = 0; i < 3; i++)
       {
         StackController.instance.RemoveOneStilt();
       }
 
       if (other.tag == "LastFireRing" && GameManager.instance.didLoose == false)
       {
-        GameManager.instance.WinRoutine();
+        // GameManager.instance.WinRoutine();
       }
+
+      didExitFire = true;
+      other.enabled = false;
 
     }
 
   }
+
+  public void EnableConstantforce()
+  {
+    GetComponent<ConstantForce>().enabled = true;
+  }
+
+  public void DisableConstantForce()
+  {
+    GetComponent<ConstantForce>().enabled = false;
+  }
+
 }
